@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "gamewidget.h"
+#include <QColor>
+
 
 namespace Ui {
 class MainWindow;

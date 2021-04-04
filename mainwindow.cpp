@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     game = new GameWidget();
+    game->setStyleSheet("background-color: rgb(236, 188, 29);");
     game->hide();
     // 子窗口点击返回键时返回父窗口
     // https://blog.csdn.net/weixin_48424192/article/details/109195369?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_baidulandingword-4&spm=1001.2101.3001.4242
