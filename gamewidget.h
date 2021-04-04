@@ -10,6 +10,7 @@
 #include "QTcpSocket"
 #include <QDebug>
 #include <QHostAddress>
+#include <QLabel>
 
 namespace Ui {
 class GameWidget;
@@ -45,13 +46,14 @@ private:
     int cursor_row_;
     int cursor_col_;
     // tcp_socket
-    QTcpSocket* tcp_socket;
+    QTcpSocket* tcp_socket = nullptr;
     // 网络对战先手
     bool first_action;
     bool can_action; // 能否动
 private slots:
     void data_received(); // tcp收到数据
     void on_pushButton_Return_clicked();
+    void on_pushButton_Connected_clicked();
 };
 
 #endif // GAMEWIDGET_H

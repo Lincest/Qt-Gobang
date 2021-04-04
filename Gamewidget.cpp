@@ -25,23 +25,35 @@ GameWidget::~GameWidget()
 }
 
 void GameWidget::on_pushButton_Return_clicked() {
-    this->close();
     emit return_to_main();
+    this->close();
+    // 断开网络连接
+    qDebug() << tcp_socket->state() << endl;
+    // https://blog.csdn.net/lizuobin2/article/details/52293984
+    if (tcp_socket->state() != 0)
+        tcp_socket->close();
 }
 
 void GameWidget::init_game(GameType m) {
     game->start_game(m);
     if (m == kOnline) {
-        set_tcp();
         first_action = false;
         setMouseTracking(false); // 不追踪鼠标
         can_action = false; // 按鼠标不反应
+        ui->label_connection->setText("not connected");
     }
+}
+
+void GameWidget::on_pushButton_Connected_clicked() {
+    qDebug() << tcp_socket << endl;
+    if (tcp_socket && tcp_socket->state() != 0) return;
+    if (tcp_socket == nullptr)
+        tcp_socket = new QTcpSocket(this);
+    set_tcp();
 }
 
 // TODO: 指定服务器和端口, 显示连接信息
 void GameWidget::set_tcp() {
-    tcp_socket = new QTcpSocket(this);
     // 连接服务器
     quint16 port = 6667;
     QString ip = "127.0.0.1";
@@ -50,6 +62,7 @@ void GameWidget::set_tcp() {
     tcp_socket->connectToHost(*server_ip, port);
     // 绑定信号槽,当有数据发回来时调用data_received
     connect(tcp_socket, SIGNAL(readyRead()), this, SLOT(data_received()));
+    connect(tcp_socket, &QAbstractSocket::connected, this, [&](){ui->label_connection->setText("Ready (waiting for anthor)...");});
 }
 
 void GameWidget::data_received() {
@@ -67,10 +80,14 @@ void GameWidget::data_received() {
     }
     // 两个客户端都连上了
     if (msg.contains("ready")) {
+        QMessageBox::information(nullptr, "Game Start", "Game Start!");
         if (first_action == true) {
+            ui->label_connection->setText("You are Black");
             setMouseTracking(true);
             can_action = true;
+            return;
         }
+        ui->label_connection->setText("You are White");
         return;
     }
     int row = msg.section(',', 0, 0).toInt(), col = msg.section(',', 1, 1).toInt();
@@ -131,10 +148,8 @@ void GameWidget::paintEvent(QPaintEvent *event) {
                 tcp_socket->write(msg.toUtf8(), msg.length());
                 tcp_socket->close();
             }
-            // 回到主界面
             // TODO: 继续保持在当前界面, 开始下一局
-            this->close();
-            emit return_to_main();
+            this->init_game(kOnline);
         }
     }
 }
