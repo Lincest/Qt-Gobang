@@ -13,7 +13,7 @@ void Game::start_game(GameType type) {
     // 初始化棋盘
     memset(game_map_, 0, sizeof(game_map_));
 
-    // 初始化评分
+    // 初始化评分(AI模式)
     if (game_type_ == kAI) {
         memset(score_map_, 0, sizeof(score_map_));
     }

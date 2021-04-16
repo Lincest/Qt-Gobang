@@ -1,21 +1,13 @@
 #include "gamewidget.h"
 #include "ui_gamewidget.h"
+#include "iostream"
+using namespace std;
 
 GameWidget::GameWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::GameWidget)
 {
     ui->setupUi(this);
-    game = new Game();
-    // 棋盘左上角坐标为(20, 20)
-    // 棋盘每一个正方形格子边长为30
-    for (int i = 0; i < kBoardSize; ++i) {
-        for (int j = 0; j < kBoardSize; ++j) {
-            board_[i][j].setX(20 + 30 * i);
-            board_[i][j].setY(20 + 30 * j);
-        }
-    }
-    setMouseTracking(true);
 }
 
 GameWidget::~GameWidget()
@@ -25,28 +17,40 @@ GameWidget::~GameWidget()
 }
 
 void GameWidget::on_pushButton_Return_clicked() {
+    can_action = false;
     emit return_to_main();
     this->close();
     // 断开网络连接
-    qDebug() << tcp_socket->state() << endl;
-    // https://blog.csdn.net/lizuobin2/article/details/52293984
-    if (tcp_socket->state() != 0)
-        tcp_socket->close();
+    tcp_socket->close();
 }
 
 void GameWidget::init_game(GameType m) {
+    game = new Game();
     game->start_game(m);
+    // 棋盘左上角坐标为(20, 20)
+    // 棋盘每一个正方形格子边长为30
+    for (int i = 0; i < kBoardSize; ++i) {
+        for (int j = 0; j < kBoardSize; ++j) {
+            board_[i][j].setX(20 + 30 * i);
+            board_[i][j].setY(20 + 30 * j);
+        }
+    }
+    can_action = false; // 按鼠标不反应
+    setMouseTracking(false); // 不追踪鼠标
+    // 如果是网络模式
     if (m == kOnline) {
         first_action = false;
-        setMouseTracking(false); // 不追踪鼠标
-        can_action = false; // 按鼠标不反应
         ui->label_connection->setText("not connected");
     }
+    update();
 }
 
 void GameWidget::on_pushButton_Connected_clicked() {
-    qDebug() << tcp_socket << endl;
-    if (tcp_socket && tcp_socket->state() != 0) return;
+    qDebug() << tcp_socket << " " << endl;
+    if (tcp_socket && tcp_socket->state() != 0) {
+        qDebug() << tcp_socket->state() << endl;
+        return;
+    }
     if (tcp_socket == nullptr)
         tcp_socket = new QTcpSocket(this);
     set_tcp();
@@ -63,6 +67,8 @@ void GameWidget::set_tcp() {
     // 绑定信号槽,当有数据发回来时调用data_received
     connect(tcp_socket, SIGNAL(readyRead()), this, SLOT(data_received()));
     connect(tcp_socket, &QAbstractSocket::connected, this, [&](){ui->label_connection->setText("Ready (waiting for anthor)...");});
+//    connect(tcp_socket, &QTcpSocket::disconnected, this, [&](){this->end_game_with_box("TCP error");});
+    connect(tcp_socket, &QTcpSocket::disconnected, this, &GameWidget::on_pushButton_Return_clicked);
 }
 
 void GameWidget::data_received() {
@@ -90,14 +96,38 @@ void GameWidget::data_received() {
         ui->label_connection->setText("You are White");
         return;
     }
-    int row = msg.section(',', 0, 0).toInt(), col = msg.section(',', 1, 1).toInt();
-    setMouseTracking(false);
-    if (row != -1 && col != -1 && game->game_map_[row][col] == kEmpty) {
-        game->person_action(row, col);
-        setMouseTracking(true);
-        can_action = true;
+    // 游戏中有一方退出, 则游戏结束
+    if (msg.contains("end")) {
+        end_game_with_box("The other client aborted!");
     }
-    update();
+    if (msg != "") {
+        int row = msg.section(',', 0, 0).toInt(), col = msg.section(',', 1, 1).toInt();
+        setMouseTracking(false);
+        if (row != -1 && col != -1 && game->game_map_[row][col] == kEmpty) {
+            game->person_action(row, col);
+            setMouseTracking(true);
+            can_action = true;
+        }
+        update();
+    }
+}
+
+void GameWidget::end_game_with_box(QString win_text) {
+    // MessageBox: https://doc.qt.io/qt-5/qmessagebox.html#StandardButton-enum
+    QMessageBox msg;
+    msg.setWindowTitle("Game Ends");
+    msg.setText(win_text);
+    msg.setStandardButtons(QMessageBox::Ok);
+    // TODO: 输赢计数
+    // 重启游戏
+    if (msg.exec() == QMessageBox::Ok) {
+        if (game->game_type_ == kOnline) {
+            tcp_socket->close();
+        }
+        // TODO: 继续保持在当前界面, 开始下一局
+        this->on_pushButton_Return_clicked();
+//        this->init_game(kOnline);
+    }
 }
 
 // 绘制棋盘和棋子
@@ -120,37 +150,27 @@ void GameWidget::paintEvent(QPaintEvent *event) {
     // 画棋子
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
+            // DEBUG, qDebug不能不换行我也是醉了
+            // cout << game->game_map_[i][j] << ' ';
             if (game->game_map_[i][j] != kEmpty) {
                 game->game_map_[i][j] == kBlack ? painter.setBrush(Qt::black) : painter.setBrush(Qt::white);
                 painter.drawEllipse(board_[j][i].x()-10, board_[j][i].y()-10, 20, 20);
             }
         }
+        // DEBUG
+        // cout << endl;
     }
+    // DEBUG
+    // cout << endl;
     // 判断输赢, 如果出现输赢或者死局重启游戏
     int status = game->evaluate();
     if (status != NO_WIN) {
-        qDebug() << "game ends, should restart..." << endl;
+        qDebug() << "game ends" << endl;
         QString win_str;
         if (status == BLACK_WIN) win_str = "Black Win!";
         else if (status == WHITE_WIN) win_str = "White Win!";
         else if (status == DEAD_GAME) win_str = "Dead Game!";
-        // MessageBox逻辑: https://doc.qt.io/qt-5/qmessagebox.html#StandardButton-enum
-        QMessageBox msg;
-        msg.setWindowTitle("Game Ends");
-        msg.setText(win_str);
-        msg.setStandardButtons(QMessageBox::Ok);
-        // TODO: 输赢计数
-        // 重启游戏
-        if (msg.exec() == QMessageBox::Ok) {
-            if (game->game_type_ == kOnline) {
-                // 发送结束标志
-                QString msg = "end";
-                tcp_socket->write(msg.toUtf8(), msg.length());
-                tcp_socket->close();
-            }
-            // TODO: 继续保持在当前界面, 开始下一局
-            this->init_game(kOnline);
-        }
+        end_game_with_box(win_str);
     }
 }
 
@@ -169,7 +189,7 @@ void GameWidget::mouseMoveEvent(QMouseEvent *event) {
                     cursor_col_ = i;
                     // 显示坐标
                     QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
-                    qDebug() << cursor_str << endl;
+//                    qDebug() << cursor_str << endl;
                     // TODO: 展示坐标
                     break;
                 }
