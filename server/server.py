@@ -3,7 +3,7 @@ import select
 
 
 # 创建一个类
-class GameServer:
+class ChatServer:
     # 初始化 传入监听端口即可
     def __init__(self, port):
         self.clients_num = 0
@@ -43,6 +43,9 @@ class GameServer:
                         if len(self.descripors) == 1:
                             self.the_first = True  # 重置
                             print("客户端已全部断开")
+                        else:
+                            # 让另一个客户端退出
+                            self.broadcast_str("end", sock)
                     else:
                         newstr = str_send
                         self.broadcast_str(newstr, sock)
@@ -73,4 +76,4 @@ class GameServer:
         print("转发内容:" + str_send)
 
 # 实例化监听服务器
-GameServer(6667).run()
+ChatServer(6667).run()
