@@ -41,6 +41,19 @@ void GameWidget::init_game(GameType m) {
     if (m == kOnline) {
         first_action = false;
         ui->label_connection->setText("not connected");
+        // 显示ui
+        ui->label_connection->show();
+        ui->pushButton_Connected->show();
+        ui->label->show();
+    } else if (m == kAI) {
+        // TODO: 选择先后手
+        setMouseTracking(true);
+        can_action = true;
+        first_action = true;
+        // 隐藏ui
+        ui->label_connection->hide();
+        ui->pushButton_Connected->hide();
+        ui->label->hide();
     }
     update();
 }
@@ -162,16 +175,6 @@ void GameWidget::paintEvent(QPaintEvent *event) {
     }
     // DEBUG
     // cout << endl;
-    // 判断输赢, 如果出现输赢或者死局重启游戏
-    int status = game->evaluate();
-    if (status != NO_WIN) {
-        qDebug() << "game ends" << endl;
-        QString win_str;
-        if (status == BLACK_WIN) win_str = "Black Win!";
-        else if (status == WHITE_WIN) win_str = "White Win!";
-        else if (status == DEAD_GAME) win_str = "Dead Game!";
-        end_game_with_box(win_str);
-    }
 }
 
 // 跟踪鼠标, 绘制鼠标小方格
@@ -211,10 +214,31 @@ void GameWidget::mouseReleaseEvent(QMouseEvent *event) {
             tcp_socket->flush();
             setMouseTracking(false);
             can_action = false;
-        } else {
-            game->ai_action();
+            update();
+            check_state();
+        } else if (game->game_type_ == kAI){
+            game->person_action(cursor_row_, cursor_col_);
+            update();
+            if (check_state() == kNoWin) {
+                game->ai_action();
+                update();
+                check_state();
+            }
         }
-        update();
     }
+}
+
+GameStatus GameWidget::check_state() {
+    // 判断输赢, 如果出现输赢或者死局重启游戏
+    GameStatus status = game->evaluate();
+    if (status != kNoWin) {
+        qDebug() << "game ends" << endl;
+        QString win_str;
+        if (status == kBlackWin) win_str = "Black Win!";
+        else if (status == kWhiteWin) win_str = "White Win!";
+        else if (status == kDeadGame) win_str = "Dead Game!";
+        end_game_with_box(win_str);
+    }
+    return status;
 }
 

@@ -25,23 +25,23 @@ void Game::start_game(GameType type) {
 }
 
 void Game::init_tuple6type() {
-    memset(tuple6type,0,sizeof (tuple6type));
+    memset(tuple6type,0x7f,sizeof (tuple6type));
     //白连5,ai赢
-    tuple6type[2][2][2][2][2][2]=WHITE_WIN;
-    tuple6type[2][2][2][2][2][0]=WHITE_WIN;
-    tuple6type[0][2][2][2][2][2]=WHITE_WIN;
-    tuple6type[2][2][2][2][2][1]=WHITE_WIN;
-    tuple6type[1][2][2][2][2][2]=WHITE_WIN;
-    tuple6type[3][2][2][2][2][2]=WHITE_WIN;
-    tuple6type[2][2][2][2][2][3]=WHITE_WIN;
+    tuple6type[2][2][2][2][2][2]=kWhiteWin;
+    tuple6type[2][2][2][2][2][0]=kWhiteWin;
+    tuple6type[0][2][2][2][2][2]=kWhiteWin;
+    tuple6type[2][2][2][2][2][1]=kWhiteWin;
+    tuple6type[1][2][2][2][2][2]=kWhiteWin;
+    tuple6type[3][2][2][2][2][2]=kWhiteWin;
+    tuple6type[2][2][2][2][2][3]=kWhiteWin;
     //黑连5,ai输
-    tuple6type[1][1][1][1][1][1]=BLACK_WIN;
-    tuple6type[1][1][1][1][1][0]=BLACK_WIN;
-    tuple6type[0][1][1][1][1][1]=BLACK_WIN;
-    tuple6type[1][1][1][1][1][2]=BLACK_WIN;
-    tuple6type[2][1][1][1][1][1]=BLACK_WIN;
-    tuple6type[3][1][1][1][1][1]=BLACK_WIN;
-    tuple6type[1][1][1][1][1][3]=BLACK_WIN;
+    tuple6type[1][1][1][1][1][1]=kBlackWin;
+    tuple6type[1][1][1][1][1][0]=kBlackWin;
+    tuple6type[0][1][1][1][1][1]=kBlackWin;
+    tuple6type[1][1][1][1][1][2]=kBlackWin;
+    tuple6type[2][1][1][1][1][1]=kBlackWin;
+    tuple6type[3][1][1][1][1][1]=kBlackWin;
+    tuple6type[1][1][1][1][1][3]=kBlackWin;
 }
 
 
@@ -99,9 +99,10 @@ void Game::ai_action() {
 
 // 是否获胜/死棋, 判断上下左右+两条斜线
 // TODO: 实现评分矩阵, AI
-int Game::evaluate() {
+GameStatus Game::evaluate() {
     // 包含两个边界的大棋盘, 边界用3标识 (https://github.com/livingsu/Gobang-ai/blob/master/Sources/chessai.cpp)
-    int A[17][17], type;
+    int A[17][17];
+    GameStatus type;
     bool dead = true;
     for (int i = 0; i < 17; ++i) {
         A[i][0] = 3;
@@ -121,31 +122,31 @@ int Game::evaluate() {
     for (int i = 1; i <= 15; ++i) {
         for (int j = 0; j < 12; ++j) {
             type = tuple6type[A[i][j]][A[i][j+1]][A[i][j+2]][A[i][j+3]][A[i][j+4]][A[i][j+5]];
-            if (type == BLACK_WIN || type == WHITE_WIN) return type;
+            if (type == kBlackWin || type == kWhiteWin) return type;
         }
     }
     // 纵向
     for (int j = 1; j <= 15; ++j) {
         for (int i = 0; i < 12; ++i) {
             type = tuple6type[A[i][j]][A[i+1][j]][A[i+2][j]][A[i+3][j]][A[i+4][j]][A[i+5][j]];
-            if (type == BLACK_WIN || type == WHITE_WIN) return type;
+            if (type == kBlackWin || type == kWhiteWin) return type;
         }
     }
     // 左上->右下斜线
     for(int i = 0; i < 12; ++i){
         for(int j = 0;j < 12; ++j){
             type = tuple6type[A[i][j]][A[i+1][j+1]][A[i+2][j+2]][A[i+3][j+3]][A[i+4][j+4]][A[i+5][j+5]];
-            if (type == BLACK_WIN || type == WHITE_WIN) return type;
+            if (type == kBlackWin || type == kWhiteWin) return type;
         }
     }
     // 右上->左下斜线
     for(int i = 0; i < 12; ++i){
         for(int j = 5; j < 17; ++j){
             type = tuple6type[A[i][j]][A[i+1][j-1]][A[i+2][j-2]][A[i+3][j-3]][A[i+4][j-4]][A[i+5][j-5]];
-            if (type == BLACK_WIN || type == WHITE_WIN) return type;
+            if (type == kBlackWin || type == kWhiteWin) return type;
         }
     }
-    return dead ? DEAD_GAME : NO_WIN;
+    return dead ? kDeadGame : kNoWin;
 }
 
 

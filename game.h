@@ -19,7 +19,7 @@ enum GameType {
 
 // 游戏状态
 enum GameStatus {
-    kPlaying, kWin, kDead
+    kWhiteWin = 0, kBlackWin = 1, kNoWin = 2, kDeadGame = 3
 };
 
 // 棋子颜色
@@ -35,7 +35,7 @@ public:
     int score_map_[kBoardSize][kBoardSize];
     //棋型辨识数组,0无子,1黑子,2白子,3边界
     // (https://blog.csdn.net/livingsu/article/details/104539741)
-    int tuple6type[4][4][4][4][4][4];
+    GameStatus tuple6type[4][4][4][4][4][4];
     // 下棋方
     bool flag_;
     // 模式
@@ -59,7 +59,7 @@ public:
     // 更新棋盘
     void update_map(int row, int col);
     // 扫描棋盘判断局势
-    int evaluate();
+    GameStatus evaluate();
 
 };
 
