@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>699</width>
+    <height>524</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
     <width>699</width>
@@ -17,28 +25,56 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-image:url(:/resource/image/bg1.png);
+background-position:bottom;
+background-color:rgb(255,255,222);
+</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+font: 18pt &quot;楷体&quot;;
+color: white;
+background-color: rgba(125,125,125,55);
+}
+QPushButton::hover{
+	font: 18pt &quot;楷体&quot;;
+color: white;
+background-color: rgba(75,75,75,55);
+}</string>
+   </property>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>110</y>
-      <width>81</width>
-      <height>81</height>
+      <x>220</x>
+      <y>40</y>
+      <width>271</width>
+      <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">font: 20pt &quot;楷体&quot;;
+color: rgb(255, 85, 0);</string>
+    </property>
     <property name="text">
-     <string>五子棋对战</string>
+     <string>五子棋对战系统</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_Remote">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>310</y>
-      <width>91</width>
-      <height>41</height>
+      <x>150</x>
+      <y>330</y>
+      <width>176</width>
+      <height>39</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>远程联机</string>
@@ -47,49 +83,20 @@
    <widget class="QPushButton" name="pushButton_AI">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>310</y>
-      <width>111</width>
-      <height>41</height>
+      <x>350</x>
+      <y>330</y>
+      <width>181</width>
+      <height>39</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>人机互殴</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>320</y>
-      <width>81</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>请选择模式:</string>
-    </property>
-   </widget>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>699</width>
-     <height>23</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

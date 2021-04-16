@@ -20,8 +20,8 @@ void GameWidget::on_pushButton_Return_clicked() {
     can_action = false;
     emit return_to_main();
     this->close();
-    // 断开网络连接
-    tcp_socket->close();
+    if (this->tcp_socket)
+        this->tcp_socket->close();
 }
 
 void GameWidget::init_game(GameType m) {
@@ -191,6 +191,7 @@ void GameWidget::mouseMoveEvent(QMouseEvent *event) {
                     QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
 //                    qDebug() << cursor_str << endl;
                     // TODO: 展示坐标
+                    ui->lcd_position->display(cursor_str);
                     break;
                 }
             }

@@ -30,9 +30,12 @@
     <rect>
      <x>590</x>
      <y>10</y>
-     <width>88</width>
-     <height>23</height>
+     <width>91</width>
+     <height>31</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 10pt &quot;微软雅黑&quot;;</string>
    </property>
    <property name="text">
     <string>Return</string>
@@ -47,6 +50,10 @@
      <height>20</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">font: 9pt &quot;微软雅黑&quot;;
+</string>
+   </property>
    <property name="text">
     <string>Connection: </string>
    </property>
@@ -59,6 +66,10 @@
      <width>281</width>
      <height>31</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 9pt &quot;微软雅黑&quot;;
+</string>
    </property>
    <property name="text">
     <string>not connected</string>
@@ -73,8 +84,26 @@
      <height>31</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">font: 10pt &quot;微软雅黑&quot;;
+</string>
+   </property>
    <property name="text">
     <string>Start</string>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="lcd_position">
+   <property name="geometry">
+    <rect>
+     <x>590</x>
+     <y>50</y>
+     <width>91</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:rgba(75, 75, 75, 60);
+color: rgb(255, 255, 255);</string>
    </property>
   </widget>
  </widget>
