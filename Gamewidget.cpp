@@ -55,7 +55,7 @@ void GameWidget::init_game(GameType m) {
         ui->pushButton_Connected->hide();
         ui->label->hide();
     }
-    update();
+    repaint();
 }
 
 void GameWidget::on_pushButton_Connected_clicked() {
@@ -121,7 +121,7 @@ void GameWidget::data_received() {
             setMouseTracking(true);
             can_action = true;
         }
-        update();
+        repaint();
     }
 }
 
@@ -177,35 +177,46 @@ void GameWidget::paintEvent(QPaintEvent *event) {
     // cout << endl;
 }
 
-// 跟踪鼠标, 绘制鼠标小方格
+// 跟踪鼠标, 获取下棋位置
 void GameWidget::mouseMoveEvent(QMouseEvent *event) {
-    // 获取鼠标的x和y坐标
-    float x = event->x(), y = event->y();
-    // 判断在边界内部
-    if (x >= (20 - kBoardSize) && x <= (20 + kBoardSize * 30) && y >= (20 - kBoardSize) && y <= (20 + kBoardSize * 30)) {
-        for (int i = 0; i < kBoardSize; ++i) {
-            for (int j = 0; j < kBoardSize; ++j) {
-                float bx = board_[i][j].x(), by = board_[i][j].y();
-                // qDebug() << (x - bx) << ' ' << (y - by) << endl;
-                if ((x >= bx - 15) && (x < bx + 15) && (y >= by - 15) && (y < by + 15)) {
-                    cursor_row_ = j;
-                    cursor_col_ = i;
-                    // 显示坐标
-                    QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
-//                    qDebug() << cursor_str << endl;
-                    // TODO: 展示坐标
-                    ui->lcd_position->display(cursor_str);
-                    break;
+    if (can_action) {
+        // 获取鼠标的x和y坐标
+        float x = event->x(), y = event->y();
+        // 判断在边界内部
+        if (x >= (20 - kBoardSize) && x <= (20 + kBoardSize * 30) && y >= (20 - kBoardSize) && y <= (20 + kBoardSize * 30)) {
+            for (int i = 0; i < kBoardSize; ++i) {
+                for (int j = 0; j < kBoardSize; ++j) {
+                    float bx = board_[i][j].x(), by = board_[i][j].y();
+                    if ((x >= bx - 15) && (x < bx + 15) && (y >= by - 15) && (y < by + 15)) {
+                        cursor_row_ = j;
+                        cursor_col_ = i;
+                        // 显示坐标
+                        QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
+                        ui->lcd_position->display(cursor_str);
+                        break;
+                    }
                 }
             }
         }
+        repaint();
+    } else {
+        cursor_col_ = -1;
+        cursor_row_ = -1;
     }
-    update();
 }
 
-// 鼠标释放, 下棋
-void GameWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if (can_action) {
+// 鼠标点击, 下棋
+void GameWidget::mousePressEvent(QMouseEvent *event) {
+    can_action = false;
+    do_action();
+    can_action = true;
+}
+
+
+void GameWidget::do_action() {
+    // 强制事件循环, 解决鼠标点击多次事件阻塞的问题 ->   https://blog.csdn.net/simonforfuture/article/details/78977426
+    QCoreApplication::processEvents();
+    if (cursor_row_ != -1 && cursor_col_ != -1) {
         if (game->game_type_ == kOnline && game->game_map_[cursor_row_][cursor_col_] == kEmpty) {
             game->person_action(cursor_row_, cursor_col_);
             // 发送位置给Tcp服务器
@@ -213,16 +224,21 @@ void GameWidget::mouseReleaseEvent(QMouseEvent *event) {
             tcp_socket->write(msg.toUtf8(), msg.length());
             tcp_socket->flush();
             setMouseTracking(false);
-            can_action = false;
-            update();
+            repaint();
             check_state();
         } else if (game->game_type_ == kAI){
             game->person_action(cursor_row_, cursor_col_);
-            update();
+            repaint();
             if (check_state() == kNoWin) {
+                // 随机延时
                 game->ai_action();
-                update();
+                QTime time;
+                time.start();
+                int time_elapse = (rand() % 10) * 100;
+                while(time.elapsed() < time_elapse);
+                repaint();
                 check_state();
+                can_action = true; // 电脑完才能动
             }
         }
     }

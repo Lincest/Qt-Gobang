@@ -35,8 +35,10 @@ protected:
     void paintEvent(QPaintEvent* event) override;
     // 鼠标移动事件(获取鼠标实时位置以及最近的点的坐标)
     void mouseMoveEvent(QMouseEvent* event) override;
-    // 鼠标释放事件(下棋)
-    void mouseReleaseEvent(QMouseEvent* event) override;
+    // 鼠标点击事件(下棋)
+     void mousePressEvent(QMouseEvent* event) override;
+    // 下棋
+    void do_action();
 
 signals:
     void return_to_main();

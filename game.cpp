@@ -72,16 +72,19 @@ std::pair<int, int> Game::find_the_highest_point() {
     // 找到分数最高的位置
     int max_score = 0;
     std::pair<int, int> point{0, 0};
-    int row = 0, col = 0;
+    int row = 0, col = 0, cnt = 1;
     for (row = 0; row < kBoardSize; ++row) {
         for (col = 0; col < kBoardSize; ++col) {
             // 空坐标
             if (game_map_[row][col] == kEmpty) {
                 if (score_map_[row][col] >= max_score) {
                     if (max_score == score_map_[row][col]) {
-                        std::pair<int, int> new_point{row, col};
                         // 如果评分相同, 随机选择
-                        point = (rand() % 2 == 1) ? new_point : point;
+                        point = (rand() % cnt == 0) ? std::make_pair(row, col) : point;
+                        ++cnt;
+                    } else {
+                        point = std::make_pair(row, col);
+                        cnt = 0;
                     }
                     max_score = score_map_[row][col];
                 }
