@@ -111,7 +111,8 @@ void GameWidget::data_received() {
     }
     // 游戏中有一方退出, 则游戏结束
     if (msg.contains("end")) {
-        end_game_with_box("The other client aborted!");
+        if (check_state() != kNoWin)
+            end_game_with_box("The other client aborted!");
     }
     if (msg != "") {
         int row = msg.section(',', 0, 0).toInt(), col = msg.section(',', 1, 1).toInt();
@@ -163,7 +164,6 @@ void GameWidget::paintEvent(QPaintEvent *event) {
     // 画棋子
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
-            // DEBUG, qDebug不能不换行我也是醉了
             // cout << game->game_map_[i][j] << ' ';
             if (game->game_map_[i][j] != kEmpty) {
                 game->game_map_[i][j] == kBlack ? painter.setBrush(Qt::black) : painter.setBrush(Qt::white);
@@ -179,37 +179,34 @@ void GameWidget::paintEvent(QPaintEvent *event) {
 
 // 跟踪鼠标, 获取下棋位置
 void GameWidget::mouseMoveEvent(QMouseEvent *event) {
-    if (can_action) {
-        // 获取鼠标的x和y坐标
-        float x = event->x(), y = event->y();
-        // 判断在边界内部
-        if (x >= (20 - kBoardSize) && x <= (20 + kBoardSize * 30) && y >= (20 - kBoardSize) && y <= (20 + kBoardSize * 30)) {
-            for (int i = 0; i < kBoardSize; ++i) {
-                for (int j = 0; j < kBoardSize; ++j) {
-                    float bx = board_[i][j].x(), by = board_[i][j].y();
-                    if ((x >= bx - 15) && (x < bx + 15) && (y >= by - 15) && (y < by + 15)) {
-                        cursor_row_ = j;
-                        cursor_col_ = i;
-                        // 显示坐标
-                        QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
-                        ui->lcd_position->display(cursor_str);
-                        break;
-                    }
+    // 获取鼠标的x和y坐标
+    float x = event->x(), y = event->y();
+    // 判断在边界内部
+    if (x >= (20 - kBoardSize) && x <= (20 + kBoardSize * 30) && y >= (20 - kBoardSize) && y <= (20 + kBoardSize * 30)) {
+        for (int i = 0; i < kBoardSize; ++i) {
+            for (int j = 0; j < kBoardSize; ++j) {
+                float bx = board_[i][j].x(), by = board_[i][j].y();
+                if ((x >= bx - 15) && (x < bx + 15) && (y >= by - 15) && (y < by + 15)) {
+                    cursor_row_ = j;
+                    cursor_col_ = i;
+                    // 显示坐标
+                    QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
+                    ui->lcd_position->display(cursor_str);
+                    break;
                 }
             }
         }
-        repaint();
-    } else {
-        cursor_col_ = -1;
-        cursor_row_ = -1;
     }
+    repaint();
 }
 
 // 鼠标点击, 下棋
 void GameWidget::mousePressEvent(QMouseEvent *event) {
-    can_action = false;
-    do_action();
-    can_action = true;
+    // 判断是否能下棋(棋方为自己并且落点为空)
+    if(can_action && game->game_map_[cursor_row_][cursor_col_] == kEmpty) {
+        can_action = false;
+        do_action();
+    }
 }
 
 
@@ -217,7 +214,7 @@ void GameWidget::do_action() {
     // 强制事件循环, 解决鼠标点击多次事件阻塞的问题 ->   https://blog.csdn.net/simonforfuture/article/details/78977426
     QCoreApplication::processEvents();
     if (cursor_row_ != -1 && cursor_col_ != -1) {
-        if (game->game_type_ == kOnline && game->game_map_[cursor_row_][cursor_col_] == kEmpty) {
+        if (game->game_type_ == kOnline) {
             game->person_action(cursor_row_, cursor_col_);
             // 发送位置给Tcp服务器
             QString msg = QString::number(cursor_row_, 10) + ", " + QString::number(cursor_col_, 10);
