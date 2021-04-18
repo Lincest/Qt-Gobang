@@ -71,7 +71,7 @@ void GameWidget::on_pushButton_Connected_clicked() {
 
 // TODO: 指定服务器和端口, 显示连接信息
 void GameWidget::set_tcp() {
-    // 连接服务器
+    // 连接服务器 TODO: 不写死ip和端口
     quint16 port = 6667;
     QString ip = "127.0.0.1";
     QHostAddress* server_ip = new QHostAddress();
@@ -111,7 +111,7 @@ void GameWidget::data_received() {
     }
     // 游戏中有一方退出, 则游戏结束
     if (msg.contains("end")) {
-        if (check_state() != kNoWin)
+        if (check_state() != kWhiteWin && check_state() != kBlackWin)
             end_game_with_box("The other client aborted!");
     }
     if (msg != "") {
@@ -226,7 +226,7 @@ void GameWidget::do_action() {
         } else if (game->game_type_ == kAI){
             game->person_action(cursor_row_, cursor_col_);
             repaint();
-            if (check_state() == kNoWin) {
+            if (check_state() == kPlaying) {
                 // 随机延时
                 game->ai_action();
                 QTime time;
@@ -241,10 +241,10 @@ void GameWidget::do_action() {
     }
 }
 
-GameStatus GameWidget::check_state() {
+GameResult GameWidget::check_state() {
     // 判断输赢, 如果出现输赢或者死局重启游戏
-    GameStatus status = game->evaluate();
-    if (status != kNoWin) {
+    GameResult status = game->evaluate().result;
+    if (status == kDeadGame || status == kWhiteWin || status == kBlackWin) {
         qDebug() << "game ends" << endl;
         QString win_str;
         if (status == kBlackWin) win_str = "Black Win!";

@@ -11,7 +11,7 @@
 #include <QDebug>
 #include <QHostAddress>
 #include <QLabel>
-#include <Qtime>
+#include <QTime>
 
 namespace Ui {
 class GameWidget;
@@ -28,7 +28,7 @@ public:
     void init_game(GameType m);
     void set_tcp();
     void end_game_with_box(QString win_text);
-    GameStatus check_state();
+    GameResult check_state();
 
 protected:
     // 绘制棋盘和棋子

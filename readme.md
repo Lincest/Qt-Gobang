@@ -28,3 +28,4 @@ https://github.com/liu-jianhao/QtWuziqi
 
 https://github.com/tashaxing/QtWuziqi
 
+https://github.com/colingogogo/gobang_AI#gobang_ai
