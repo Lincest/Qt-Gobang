@@ -2,11 +2,14 @@
 #define GAME_H
 #include<vector>
 #include<map>
+#include<algorithm>
 
 // 五子棋游戏模型
 
 // 棋盘大小
 const int kBoardSize = 15;
+// 搜索最大深度
+const int maxDepth = 4;
 
 // 两种模式
 enum GameType {
@@ -43,6 +46,16 @@ typedef struct AllScore {
     }
 } AllScore;
 
+// 生成ai的最佳步数
+typedef struct best_step {
+    int score; // 该步数的评分
+    std::pair<int, int> pos; // 位置
+    best_step() {
+        pos = {0, 0};
+        score = -INT_MAX;
+    }
+} best_step;
+
 class Game {
 public:
     // 棋盘
@@ -58,6 +71,8 @@ public:
     bool flag_;
     // 模式
     GameType game_type_;
+    // ai下棋位置(MinMax搜索得到)
+    best_step step_;
 
 public:
     Game();
@@ -65,18 +80,20 @@ public:
     void start_game(GameType type);
     // 六元组初始化
     void init_tuple_six();
-    // 计算评分
-    void cal_score();
-    // 找到最高的评分点
-    std::pair<int, int> find_the_highest_point();
     // 下棋
     void person_action(int row, int col);
     void ai_action();
     // 更新棋盘
     void update_map(int row, int col);
-    // 扫描棋盘判断局势
+    // 扫描棋盘判断局势(重载, 有参和无参)
+    AllScore evaluate(ChessPieces game_map_[][kBoardSize]);
     AllScore evaluate();
-
+    // MinMax搜索 + alphabeta剪枝计算评分
+    int alphabeta(int depth, int alpha, int beta);
+    // 生成估值最大的十个点, 减少MinMax搜索的量(只用试最大的十个点, 而不用尝试所有点)
+    std::vector<std::vector<int>> generate_points(ChessPieces board[][kBoardSize], ChessPieces chess_type);
+    // 将棋盘反色, 目的是利用到权重设计
+    void reverse_map();
 };
 
 #endif // GAME_H

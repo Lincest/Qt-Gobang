@@ -48,8 +48,8 @@ private:
     Game* game;
     QPoint board_[kBoardSize][kBoardSize];
     // 鼠标行列
-    int cursor_row_;
-    int cursor_col_;
+    int cursor_row_ = -1;
+    int cursor_col_ = -1;
     // tcp_socket
     QTcpSocket* tcp_socket = nullptr;
     // 网络对战先手
