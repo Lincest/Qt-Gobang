@@ -28,6 +28,7 @@ public:
     void init_game(GameType m);
     void set_tcp();
     void end_game_with_box(QString win_text);
+    void create_game();
     GameResult check_state();
 
 protected:
@@ -54,12 +55,13 @@ private:
     QTcpSocket* tcp_socket = nullptr;
     // 网络对战先手
     bool first_action;
-    bool can_action; // 能否动
+    // 能否行动
+    bool can_action;
 private slots:
     void data_received(); // tcp收到数据
     void on_pushButton_Return_clicked();
-    void on_pushButton_Connected_clicked();
     void on_pushButton_Return_Back_clicked();
+    void on_pushButton_Start_clicked();
 };
 
 #endif // GAMEWIDGET_H

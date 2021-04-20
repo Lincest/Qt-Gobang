@@ -5,22 +5,19 @@
 #include <memory.h>
 #include <qdebug.h>
 
-Game::Game(){}
+Game::Game(){
+    // 初始化棋盘
+    memset(game_map_, 0, sizeof(game_map_));
+    // 初始化评分(AI模式)
+    init_tuple_six();
+    // 先手
+    flag_ = true;
+}
 
 // 初始化
 void Game::start_game(GameType type) {
     game_type_ = type;
-    // 初始化棋盘
-    memset(game_map_, 0, sizeof(game_map_));
-    // 初始化评分(AI模式)
-    if (game_type_ == kAI) {
-        qDebug() << "初始化ai模式..." << endl;
-        // 初始化六元组
-        init_tuple_six();
-    }
 
-    // 先手
-    flag_ = true;
 }
 
 void Game::init_tuple_six() {
@@ -29,8 +26,8 @@ void Game::init_tuple_six() {
     score_[kWhiteFour] = 50000;        score_[kBlackFour] = -100000;
     score_[kWhiteBlockFour] = 400;     score_[kBlackBlockFour] = -100000;
     score_[kWhiteThree] = 400;         score_[kBlackThree] = -8000;
-    score_[kWhiteBlockThree] = 20;     score_[kBlackBlockThree] = -50;
-    score_[kWhiteTwo] = 20;            score_[kBlackTwo] = -50;
+    score_[kWhiteBlockThree] = 20;     score_[kBlackBlockThree] = -60;
+    score_[kWhiteTwo] = 20;            score_[kBlackTwo] = -60;
     score_[kWhiteBlockTwo] = 1;        score_[kBlackBlockTwo] = -3;
     score_[kWhiteOne] = 1;             score_[kBlackOne] = -3;
 
@@ -344,6 +341,16 @@ void Game::update_map(int row, int col) {
     flag_ = !flag_;
 }
 
+void Game::do_random_start() {
+    srand(time(0));
+    int tmp_row = rand() % 8 + 4, tmp_col = rand() % 8 + 4;
+    while (game_map_[tmp_row][tmp_col] != kEmpty) {
+        tmp_row = rand() % 8 + 4, tmp_col = rand() % 8 + 4;
+    }
+    history_ai_.push({tmp_row, tmp_col});
+    update_map(tmp_row, tmp_col);
+}
+
 // 人下棋
 void Game::person_action(int row, int col) {
     qDebug() << "human: " << row << "," << col << endl;
@@ -356,7 +363,8 @@ void Game::person_action(int row, int col) {
 // ai下棋
 void Game::ai_action() {
     qDebug() << "AI思考中..." << endl;
-    alphabeta(maxDepth, -INT_MAX, INT_MAX); // init: [-∞,+∞]
+    ChessPieces chess = flag_ ? kBlack : kWhite;
+    alphabeta(maxDepth, -INT_MAX, INT_MAX, chess); // init: [-∞,+∞]
     qDebug() << "AI: " << step_.pos.first << "," << step_.pos.second << " ,score=" << step_.score << endl;
     if (game_map_[step_.pos.first][step_.pos.second] == kEmpty) {
         history_ai_.push({step_.pos.first, step_.pos.second});
@@ -380,16 +388,11 @@ void Game::do_back() {
 // 「静态评价启发」: 生成估值最大的十个点, 采用遍历所有空点选择最大点的方式
 std::vector<std::vector<int>> Game::generate_points(ChessPieces board[][kBoardSize], ChessPieces chess_type) {
     std::vector<std::vector<int>> allans;
-    // 黑色时反色, 由于评分矩阵的关系
     if (chess_type == kBlack) reverse_map();
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
             if (board[i][j] == kEmpty) {
-                if (chess_type == kWhite) {
-                    board[i][j] = kWhite;
-                } else {
-                    board[i][j] = kBlack;
-                }
+                board[i][j] = kWhite;
                 allans.push_back({i, j, evaluate(board).score});
                 board[i][j] = kEmpty; // 清除
             }
@@ -404,22 +407,25 @@ std::vector<std::vector<int>> Game::generate_points(ChessPieces board[][kBoardSi
 }
 
 // 「MinMax」搜索 + 「alphabeta」剪枝
-int Game::alphabeta(int depth, int alpha, int beta) {
-    best_step best;
+//  role是ai的执方
+int Game::alphabeta(int depth, int alpha, int beta, ChessPieces role) {
     // 达到搜索深度, 搜索深度最底层(叶子结点应该是ai方下棋, 故需要利用generator_point找到最大的叶子)
+    ChessPieces other = (role == kWhite ? kBlack : kWhite); // 与role相对
+    std::vector<std::vector<int>> pos;
     if (depth == 0) {
-        return generate_points(this->game_map_, kWhite)[0][2];
+        return generate_points(this->game_map_, role)[0][2];
     } else if (depth % 2 == 0) { // 偶数层, max层
-        std::vector<std::vector<int>> pos = generate_points(this->game_map_, kWhite);
+        pos = generate_points(this->game_map_, role);
         for (int i = 0; i < pos.size(); ++i) {
             std::vector<int> cur = pos[i];
-            game_map_[cur[0]][cur[1]] = kWhite; // 模拟落子
-            int v = alphabeta(depth - 1, alpha, beta);
+            game_map_[cur[0]][cur[1]] = role; // 模拟落子
+            int v = alphabeta(depth - 1, alpha, beta, role);
             game_map_[cur[0]][cur[1]] = kEmpty; // 回溯
             if (v > alpha) {
                 alpha = v;
                 if (depth == maxDepth) {
                     // 落点
+                    qDebug() << alpha << endl;
                     step_.pos.first = cur[0];
                     step_.pos.second = cur[1];
                     step_.score = v;
@@ -429,11 +435,11 @@ int Game::alphabeta(int depth, int alpha, int beta) {
         }
         return alpha;
     } else if (depth % 2 == 1) { // 奇数层, min层
-        std::vector<std::vector<int>> pos = generate_points(this->game_map_, kBlack);
+        pos = generate_points(this->game_map_, other);
         for (int i = 0; i < pos.size(); ++i) {
             std::vector<int> cur = pos[i];
-            game_map_[cur[0]][cur[1]] = kBlack;
-            int v = alphabeta(depth - 1, alpha, beta);
+            game_map_[cur[0]][cur[1]] = other;
+            int v = alphabeta(depth - 1, alpha, beta, role);
             game_map_[cur[0]][cur[1]] = kEmpty;
             if (v < beta) {
                 beta = v;
@@ -468,15 +474,21 @@ AllScore Game::evaluate(ChessPieces game_map_[][kBoardSize]) {
     }
     // 拷贝棋盘
     bool dead = true;
+    bool empty = true;
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
             // 只要有一个空就不死棋
             if (game_map_[i][j] == kEmpty) dead = false;
+            if (game_map_[i][j] != kEmpty) empty = false;
             A[i + 1][j + 1] = game_map_[i][j];
         }
     }
     if (dead) {
         ascore.result = kDeadGame;
+        return ascore;
+    }
+    if (empty) {
+        ascore.result = kNotStart;
         return ascore;
     }
     // 横
@@ -508,8 +520,9 @@ AllScore Game::evaluate(ChessPieces game_map_[][kBoardSize]) {
         }
     }
     // 计算评分
-    for (int i = 0; i <= kBoardSize; ++i) {
+    for (int i = 0; i <= 15; ++i) {
         ascore.score += ascore.stat[(GameStatus)i] * score_[(GameStatus)i];
+//        qDebug() << i << ": " << ascore.stat[(GameStatus)i] << endl;
     }
     // 判断是否输赢
     if (ascore.stat[kWhiteFive] > 0) ascore.result = kWhiteWin;

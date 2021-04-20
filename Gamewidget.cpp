@@ -20,19 +20,23 @@ void GameWidget::on_pushButton_Return_clicked() {
     can_action = false;
     emit return_to_main();
     this->close();
-    if (this->tcp_socket)
-        this->tcp_socket->close();
+    if (tcp_socket) {
+        tcp_socket->close();
+    }
+}
+
+void GameWidget::create_game() {
+    game = new Game();
 }
 
 void GameWidget::init_game(GameType m) {
-    game = new Game();
     game->start_game(m);
-    // 棋盘左上角坐标为(20, 20)
+    // 棋盘左上角坐标为(30, 30)
     // 棋盘每一个正方形格子边长为30
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
-            board_[i][j].setX(20 + 30 * i);
-            board_[i][j].setY(20 + 30 * j);
+            board_[i][j].setX(30 + 30 * i);
+            board_[i][j].setY(30 + 30 * j);
         }
     }
     can_action = false; // 按鼠标不反应
@@ -41,42 +45,67 @@ void GameWidget::init_game(GameType m) {
     if (m == kOnline) {
         first_action = false;
         ui->label_connection->setText("not connected");
+        // 隐藏按钮
+        ui->check_ai_first->hide();
+        ui->comboBox_Depth->hide();
+        ui->label_3->hide();
+        ui->label_4->hide();
         // 显示按钮
         ui->label_connection->show();
-        ui->pushButton_Connected->show();
+        ui->pushButton_Start->show();
         ui->label->show();
         qDebug() << "远程联机初始化完成..." << endl;
-    } else if (m == kAI) {
-        // TODO: 选择先后手
+    } else if (m == kAIWhite) {
         setMouseTracking(true);
         can_action = true;
         first_action = true;
         // 隐藏按钮
         ui->label_connection->hide();
-        ui->pushButton_Connected->hide();
         ui->label->hide();
         qDebug() << "AI对战初始化完成..." << endl;
+        update();
+    } else if (m == kAIBlack) {
+        // 隐藏按钮
+        ui->label_connection->hide();
+        ui->label->hide();
+        game->do_random_start();
+        qDebug() << "AI对战初始化完成..." << endl;
+        setMouseTracking(true);
+        can_action = true;
+        first_action = true;
         update();
     }
     repaint();
 }
 
-void GameWidget::on_pushButton_Connected_clicked() {
-    qDebug() << tcp_socket << " " << endl;
-    if (tcp_socket && tcp_socket->state() != 0) {
-        qDebug() << tcp_socket->state() << endl;
-        return;
+void GameWidget::on_pushButton_Start_clicked() {
+    if (game->game_type_ == kOnline) {
+        qDebug() << tcp_socket << " " << endl;
+        if (tcp_socket && tcp_socket->state() != 0) {
+            qDebug() << tcp_socket->state() << endl;
+            return;
+        }
+        if (tcp_socket == nullptr)
+            tcp_socket = new QTcpSocket(this);
+        set_tcp();
+    } else {
+        // 处理多选框
+        if (check_state() != kNotStart) return;
+        game->maxDepth = ui->comboBox_Depth->currentText().at(0).toLatin1() - '0';
+        qDebug() << game->maxDepth << endl;
+        if (ui->check_ai_first->isChecked()) {
+            this->init_game(kAIBlack);
+        } else {
+            this->init_game(kAIWhite);
+        }
     }
-    if (tcp_socket == nullptr)
-        tcp_socket = new QTcpSocket(this);
-    set_tcp();
 }
 
 // TODO: 指定服务器和端口, 显示连接信息
 void GameWidget::set_tcp() {
     // 连接服务器 TODO: 不写死ip和端口
     quint16 port = 6667;
-    QString ip = "127.0.0.1";
+    QString ip = "121.199.73.210";
     QHostAddress* server_ip = new QHostAddress();
     server_ip->setAddress(ip);
     tcp_socket->connectToHost(*server_ip, port);
@@ -122,6 +151,7 @@ void GameWidget::data_received() {
         setMouseTracking(false);
         if (row != -1 && col != -1 && game->game_map_[row][col] == kEmpty) {
             game->person_action(row, col);
+            check_state();
             setMouseTracking(true);
             can_action = true;
         }
@@ -158,6 +188,20 @@ void GameWidget::paintEvent(QPaintEvent *event) {
     for (int i = 0; i < kBoardSize; ++i) {
         painter.drawLine(this->board_[0][i], this->board_[kBoardSize - 1][i]);
         painter.drawLine(this->board_[i][0], this->board_[i][kBoardSize - 1]);
+        painter.setBrush(Qt::black);
+        painter.drawEllipse(this->board_[kBoardSize / 2][kBoardSize / 2].x() - 3, this->board_[kBoardSize / 2][kBoardSize / 2].y() - 3, 6, 6);
+        int tmp_dis = kBoardSize / 4 + 1;
+        vector<int> dis{tmp_dis, tmp_dis, -tmp_dis, -tmp_dis, tmp_dis};
+        for (int k = 0; k < 4; ++k) {
+            painter.drawEllipse(this->board_[kBoardSize / 2 + dis[k]][kBoardSize / 2 + dis[k + 1]].x() - 3, this->board_[kBoardSize / 2 + dis[k]][kBoardSize / 2 + dis[k + 1]].y() - 3, 6, 6);
+        }
+    }
+    // 画坐标
+    QFont font1("consolas", 10, QFont::Bold, true);
+    painter.setFont(font1);
+    for (int i = 0; i <= 14; ++i) {
+        painter.drawText(this->board_[0][i].x() - 20, this->board_[0][i].y() + 4, QString('A' + i));
+        painter.drawText(this->board_[i][0].x() - 4, this->board_[i][0].y() - 10, QString(QString::number(i + 1)));
     }
     // 先/后手着黑色/白色
     game->flag_ ? painter.setBrush(Qt::black) : painter.setBrush(Qt::white);
@@ -189,8 +233,8 @@ void GameWidget::mouseMoveEvent(QMouseEvent *event) {
                     cursor_row_ = j;
                     cursor_col_ = i;
                     // 显示坐标
-                    QString cursor_str = "position: " + QString::number(cursor_row_) + ", " + QString::number(cursor_col_);
-                    ui->lcd_position->display(cursor_str);
+                    QString cursor_str = QString('A' + cursor_row_) + ' ' + QString::number(cursor_col_ + 1);
+                    ui->label_pos->setText(cursor_str);
                     break;
                 }
             }
@@ -222,7 +266,7 @@ void GameWidget::do_action() {
             setMouseTracking(false);
             repaint();
             check_state();
-        } else if (game->game_type_ == kAI){
+        } else if (game->game_type_ == kAIWhite || game->game_type_ == kAIBlack){
             game->person_action(cursor_row_, cursor_col_);
             repaint();
             if (check_state() == kPlaying) {
@@ -240,6 +284,7 @@ GameResult GameWidget::check_state() {
     GameResult status = game->evaluate().result;
     if (status == kDeadGame || status == kWhiteWin || status == kBlackWin) {
         QString win_str;
+        qDebug() << status << endl;
         if (status == kBlackWin) win_str = "Black Win!";
         else if (status == kWhiteWin) win_str = "White Win!";
         else if (status == kDeadGame) win_str = "Dead Game!";
@@ -250,7 +295,7 @@ GameResult GameWidget::check_state() {
 
 // 悔棋
 void GameWidget::on_pushButton_Return_Back_clicked() {
-    if (game->game_type_ == kAI) {
+    if (game->game_type_ == kAIWhite || game->game_type_ == kAIBlack) {
         // 只有电脑下完了才能悔棋
         if (can_action) {
             game->do_back();

@@ -75,7 +75,7 @@
     <string>not connected</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_Connected">
+  <widget class="QPushButton" name="pushButton_Start">
    <property name="geometry">
     <rect>
      <x>590</x>
@@ -92,20 +92,6 @@
     <string>Start</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="lcd_position">
-   <property name="geometry">
-    <rect>
-     <x>590</x>
-     <y>50</y>
-     <width>91</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">background-color:rgba(75, 75, 75, 60);
-color: rgb(255, 255, 255);</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pushButton_Return_Back">
    <property name="geometry">
     <rect>
@@ -119,8 +105,99 @@ color: rgb(255, 255, 255);</string>
     <string notr="true">font: 10pt &quot;微软雅黑&quot;;</string>
    </property>
    <property name="text">
-    <string>Back</string>
+    <string>Regret</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>50</y>
+     <width>161</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Position:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_pos">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>510</x>
+     <y>360</y>
+     <width>161</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>先后手</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>搜索深度</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="check_ai_first">
+        <property name="text">
+         <string>AI先手</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBox_Depth">
+        <item>
+         <property name="text">
+          <string>2层</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4层</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>6层</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>8层</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

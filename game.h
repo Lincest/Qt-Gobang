@@ -9,12 +9,10 @@
 
 // 棋盘大小
 const int kBoardSize = 15;
-// 搜索最大深度
-const int maxDepth = 3;
 
 // 两种模式
 enum GameType {
-    kAI, kOnline
+    kAIBlack, kOnline, kAIWhite
 };
 
 // 游戏状态
@@ -31,7 +29,7 @@ enum GameStatus {
 
 // 游戏结果
 enum GameResult {
-    kDeadGame, kWhiteWin, kBlackWin, kPlaying
+    kDeadGame, kWhiteWin, kBlackWin, kPlaying, kNotStart
 };
 
 // 棋子颜色
@@ -75,6 +73,8 @@ public:
     best_step step_;
     // 保存历史记录, 用于悔棋
     std::stack<std::pair<int, int>> history_person_, history_ai_;
+    // 搜索最大深度
+    int maxDepth = 4;
 
 public:
     Game();
@@ -91,13 +91,15 @@ public:
     AllScore evaluate(ChessPieces game_map_[][kBoardSize]);
     AllScore evaluate();
     // MinMax搜索 + alphabeta剪枝计算评分
-    int alphabeta(int depth, int alpha, int beta);
+    int alphabeta(int depth, int alpha, int beta, ChessPieces role);
     // 生成估值最大的十个点, 减少MinMax搜索的量(只用试最大的十个点, 而不用尝试所有点)
     std::vector<std::vector<int>> generate_points(ChessPieces board[][kBoardSize], ChessPieces chess_type);
     // 将棋盘反色
     void reverse_map();
     // 悔棋
     void do_back();
+    // 随即开局
+    void do_random_start();
 };
 
 #endif // GAME_H
