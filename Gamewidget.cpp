@@ -31,12 +31,9 @@ void GameWidget::init_game(GameType m) {
     // 棋盘每一个正方形格子边长为30
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
-            // DEBUG
-//            cout << game->game_map_[i][j] << ' ';
             board_[i][j].setX(20 + 30 * i);
             board_[i][j].setY(20 + 30 * j);
         }
-//        cout << endl;
     }
     can_action = false; // 按鼠标不反应
     setMouseTracking(false); // 不追踪鼠标
@@ -44,7 +41,7 @@ void GameWidget::init_game(GameType m) {
     if (m == kOnline) {
         first_action = false;
         ui->label_connection->setText("not connected");
-        // 显示ui
+        // 显示按钮
         ui->label_connection->show();
         ui->pushButton_Connected->show();
         ui->label->show();
@@ -54,11 +51,12 @@ void GameWidget::init_game(GameType m) {
         setMouseTracking(true);
         can_action = true;
         first_action = true;
-        // 隐藏ui
+        // 隐藏按钮
         ui->label_connection->hide();
         ui->pushButton_Connected->hide();
         ui->label->hide();
         qDebug() << "AI对战初始化完成..." << endl;
+        update();
     }
     repaint();
 }
@@ -161,30 +159,21 @@ void GameWidget::paintEvent(QPaintEvent *event) {
         painter.drawLine(this->board_[0][i], this->board_[kBoardSize - 1][i]);
         painter.drawLine(this->board_[i][0], this->board_[i][kBoardSize - 1]);
     }
-//    qDebug() << "棋盘绘制完成..." << endl;
     // 先/后手着黑色/白色
     game->flag_ ? painter.setBrush(Qt::black) : painter.setBrush(Qt::white);
     // 画光标
-//    qDebug() << "can_action: " << can_action << " " << "cursor_col_" << cursor_col_ << " " << "cursor_row_" << cursor_row_ << endl;
     if (can_action && cursor_col_ != -1 && cursor_row_ != -1) {
         painter.drawRect(board_[cursor_col_][cursor_row_].x() - 4, board_[cursor_col_][cursor_row_].y() - 4, 8, 8);
     }
-//    qDebug() << "光标绘制完成..." << endl;
     // 画棋子
     for (int i = 0; i < kBoardSize; ++i) {
         for (int j = 0; j < kBoardSize; ++j) {
-            // DEBUG
-            // cout << game->game_map_[i][j] << ' ';
             if (game->game_map_[i][j] != kEmpty) {
                 game->game_map_[i][j] == kBlack ? painter.setBrush(Qt::black) : painter.setBrush(Qt::white);
                 painter.drawEllipse(board_[j][i].x()-10, board_[j][i].y()-10, 20, 20);
             }
         }
-        // DEBUG
-        // cout << endl;
     }
-    // DEBUG
-    // cout << endl;
 }
 
 // 跟踪鼠标, 获取下棋位置
@@ -238,11 +227,6 @@ void GameWidget::do_action() {
             repaint();
             if (check_state() == kPlaying) {
                 game->ai_action();
-                // 随机延时
-//                QTime time;
-//                time.start();
-//                int time_elapse = (rand() % 10) * 100;
-//                while(time.elapsed() < time_elapse);
                 repaint();
                 check_state();
                 can_action = true; // 电脑完才能动
@@ -251,11 +235,10 @@ void GameWidget::do_action() {
     }
 }
 
+// 判断输赢, 如果出现输赢或者死局重启游戏
 GameResult GameWidget::check_state() {
-    // 判断输赢, 如果出现输赢或者死局重启游戏
     GameResult status = game->evaluate().result;
     if (status == kDeadGame || status == kWhiteWin || status == kBlackWin) {
-        qDebug() << "game ends" << endl;
         QString win_str;
         if (status == kBlackWin) win_str = "Black Win!";
         else if (status == kWhiteWin) win_str = "White Win!";
@@ -263,5 +246,16 @@ GameResult GameWidget::check_state() {
         end_game_with_box(win_str);
     }
     return status;
+}
+
+// 悔棋
+void GameWidget::on_pushButton_Return_Back_clicked() {
+    if (game->game_type_ == kAI) {
+        // 只有电脑下完了才能悔棋
+        if (can_action) {
+            game->do_back();
+            repaint();
+        }
+    }
 }
 

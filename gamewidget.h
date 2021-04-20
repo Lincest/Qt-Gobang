@@ -59,6 +59,7 @@ private slots:
     void data_received(); // tcp收到数据
     void on_pushButton_Return_clicked();
     void on_pushButton_Connected_clicked();
+    void on_pushButton_Return_Back_clicked();
 };
 
 #endif // GAMEWIDGET_H
