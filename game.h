@@ -72,7 +72,7 @@ public:
     // ai下棋位置(MinMax搜索得到)
     best_step step_;
     // 保存历史记录, 用于悔棋
-    std::stack<std::pair<int, int>> history_person_, history_ai_;
+    std::vector<std::pair<int, int>> history_person_, history_ai_;
     // 搜索最大深度
     int maxDepth = 4;
 

@@ -22,7 +22,7 @@ void Game::start_game(GameType type) {
 
 void Game::init_tuple_six() {
     // 初始化棋形对应评分, 准确来说这里的白指的是「当前下棋方」,黑是「对手」
-    score_[kWhiteFive] = 1000000;      score_[kBlackFive] = -10000000;
+    score_[kWhiteFive] = 2000000;      score_[kBlackFive] = -10000000;
     score_[kWhiteFour] = 50000;        score_[kBlackFour] = -100000;
     score_[kWhiteBlockFour] = 400;     score_[kBlackBlockFour] = -100000;
     score_[kWhiteThree] = 400;         score_[kBlackThree] = -8000;
@@ -347,7 +347,7 @@ void Game::do_random_start() {
     while (game_map_[tmp_row][tmp_col] != kEmpty) {
         tmp_row = rand() % 8 + 4, tmp_col = rand() % 8 + 4;
     }
-    history_ai_.push({tmp_row, tmp_col});
+    history_ai_.push_back({tmp_row, tmp_col});
     update_map(tmp_row, tmp_col);
 }
 
@@ -356,7 +356,7 @@ void Game::person_action(int row, int col) {
     qDebug() << "human: " << row << "," << col << endl;
     if (game_map_[row][col] == kEmpty) {
         update_map(row, col);
-        history_person_.push({row, col});
+        history_person_.push_back({row, col});
     }
 }
 
@@ -367,7 +367,7 @@ void Game::ai_action() {
     alphabeta(maxDepth, -INT_MAX, INT_MAX, chess); // init: [-∞,+∞]
     qDebug() << "AI: " << step_.pos.first << "," << step_.pos.second << " ,score=" << step_.score << endl;
     if (game_map_[step_.pos.first][step_.pos.second] == kEmpty) {
-        history_ai_.push({step_.pos.first, step_.pos.second});
+        history_ai_.push_back({step_.pos.first, step_.pos.second});
         update_map(step_.pos.first, step_.pos.second);
     }
 }
@@ -376,10 +376,10 @@ void Game::ai_action() {
 void Game::do_back() {
     qDebug() << "悔棋...";
     if (!history_ai_.empty() && !history_person_.empty()) {
-        game_map_[history_ai_.top().first][history_ai_.top().second] = kEmpty;
-        game_map_[history_person_.top().first][history_person_.top().second] = kEmpty;
-        history_ai_.pop();
-        history_person_.pop();
+        game_map_[history_ai_.back().first][history_ai_.back().second] = kEmpty;
+        game_map_[history_person_.back().first][history_person_.back().second] = kEmpty;
+        history_ai_.pop_back();
+        history_person_.pop_back();
     } else {
         qDebug() << "没有可悔的棋..." << endl;
     }
@@ -493,27 +493,27 @@ AllScore Game::evaluate(ChessPieces game_map_[][kBoardSize]) {
     }
     // 横
     for (int i = 1; i <= kBoardSize; ++i) {
-        for (int j = 0; j < kBoardSize - 5; ++j) {
+        for (int j = 0; j < kBoardSize - 3; ++j) {
             type = tuple_six_[A[i][j]][A[i][j+1]][A[i][j+2]][A[i][j+3]][A[i][j+4]][A[i][j+5]];
             ++ascore.stat[type];
         }
     }
     // 纵
     for (int j = 1; j <= kBoardSize; ++j) {
-        for (int i = 0; i < kBoardSize - 5; ++i) {
+        for (int i = 0; i < kBoardSize - 3; ++i) {
             type = tuple_six_[A[i][j]][A[i+1][j]][A[i+2][j]][A[i+3][j]][A[i+4][j]][A[i+5][j]];
             ++ascore.stat[type];
         }
     }
     // 左上->右下
-    for(int i = 0; i < kBoardSize - 5; ++i) {
-        for(int j = 0; j < kBoardSize - 5; ++j) {
+    for(int i = 0; i < kBoardSize - 3; ++i) {
+        for(int j = 0; j < kBoardSize - 3; ++j) {
             type = tuple_six_[A[i][j]][A[i+1][j+1]][A[i+2][j+2]][A[i+3][j+3]][A[i+4][j+4]][A[i+5][j+5]];
             ++ascore.stat[type];
         }
     }
     // 右上->左下
-    for(int i = 0; i < kBoardSize - 5; ++i){
+    for(int i = 0; i < kBoardSize - 3; ++i){
         for(int j = 5; j < kBoardSize + 2; ++j){
             type = tuple_six_[A[i][j]][A[i+1][j-1]][A[i+2][j-2]][A[i+3][j-3]][A[i+4][j-4]][A[i+5][j-5]];
             ++ascore.stat[type];

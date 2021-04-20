@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>roccoshi@五子棋ai</string>
   </property>
   <widget class="QPushButton" name="pushButton_Return">
    <property name="geometry">
@@ -38,14 +38,14 @@
     <string notr="true">font: 10pt &quot;微软雅黑&quot;;</string>
    </property>
    <property name="text">
-    <string>Return</string>
+    <string>返回</string>
    </property>
   </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>456</y>
+     <y>460</y>
      <width>101</width>
      <height>20</height>
     </rect>
@@ -55,16 +55,16 @@
 </string>
    </property>
    <property name="text">
-    <string>Connection: </string>
+    <string>连接状态:</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_connection">
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>450</y>
+     <y>460</y>
      <width>281</width>
-     <height>31</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -105,7 +105,7 @@
     <string notr="true">font: 10pt &quot;微软雅黑&quot;;</string>
    </property>
    <property name="text">
-    <string>Regret</string>
+    <string>悔棋</string>
    </property>
   </widget>
   <widget class="QWidget" name="horizontalLayoutWidget">
@@ -121,7 +121,7 @@
     <item>
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Position:</string>
+       <string>位置:</string>
       </property>
      </widget>
     </item>

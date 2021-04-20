@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>roccoshi@五子棋ai</string>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
